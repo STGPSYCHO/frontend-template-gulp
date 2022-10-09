@@ -8,6 +8,8 @@ const sourcemaps = require('gulp-sourcemaps');
 const gulpif = require('gulp-if');
 const browserSync = require('browser-sync').create();
 const reload = browserSync.reload;
+const babel = require('gulp-babel');
+const concat = require('gulp-concat');
 
 const env = process.env.NODE_ENV || 'development';
 
@@ -31,6 +33,16 @@ return src('src/scss/main.scss')
 	.pipe(dest('app/assets/css'))
     .pipe(reload({ stream: true }));
 });
+
+task('scripts', () => {
+    return src(['src/js/*.js'])
+        .pipe(concat('main.js'))
+        .pipe(babel({
+            presets: ['@babel/env']
+        }))
+        .pipe(dest('app/assets/js'))
+        .pipe(reload({ stream: true }));
+    });
 
 task('copy:html', () => {
 return src('src/html/*.html')
@@ -56,13 +68,14 @@ task('watch', () => {
 	watch('src/scss/**/*.scss', series('styles'));
     watch('src/html/*.html', series('copy:html'));
     watch('src/images/**/*', series('copy:images'));
+    watch('src/js/*.js', series('scripts'));
 });
 
 
 task('default',
 	series(
 		'clean',
-        parallel('copy:html', 'copy:images', 'styles'),
+        parallel('copy:html', 'copy:images', 'styles', 'scripts'),
 		parallel('watch', 'server')
 	)
 );
@@ -70,6 +83,6 @@ task('default',
 task('build',
 	series(
 		'clean',
-        parallel('copy:html', 'copy:images', 'styles')
+        parallel('copy:html', 'copy:images', 'styles', 'scripts')
 	)
 );
